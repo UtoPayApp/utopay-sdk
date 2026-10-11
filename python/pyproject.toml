@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "utopay"
+version = "1.0.0"
+description = "UTOPAY payment gateway API client: card, Apple Pay, PayPal and crypto (USDT, ETH, BNB) payments with payouts to your own wallet."
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "MIT" }
+authors = [{ name = "UTOPAY", email = "info@utopay.app" }]
+keywords = ["payment gateway", "crypto payments", "usdt", "payment api", "high risk", "webhooks", "utopay"]
+
+[project.urls]
+Homepage = "https://utopay.app/payment-gateway-api"
+Documentation = "https://utopay.app/docs"
+Source = "https://github.com/UtoPayApp/utopay-sdk"
+
+[tool.setuptools]
+py-modules = ["utopay"]

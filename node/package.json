@@ -1,0 +1,15 @@
+{
+  "name": "utopay",
+  "version": "1.0.0",
+  "description": "UTOPAY payment gateway API client: card, Apple Pay, PayPal and crypto (USDT, ETH, BNB) payments with payouts to your own wallet.",
+  "main": "utopay.js",
+  "types": "utopay.d.ts",
+  "files": ["utopay.js", "utopay.d.ts", "README.md"],
+  "engines": { "node": ">=18" },
+  "keywords": ["payment gateway", "crypto payments", "usdt", "payment api", "high risk", "apple pay", "webhooks", "utopay"],
+  "homepage": "https://utopay.app/payment-gateway-api",
+  "repository": { "type": "git", "url": "https://github.com/UtoPayApp/utopay-sdk.git", "directory": "node" },
+  "bugs": { "url": "https://github.com/UtoPayApp/utopay-sdk/issues" },
+  "license": "MIT",
+  "author": "UTOPAY <info@utopay.app> (https://utopay.app)"
+}

@@ -1,0 +1,12 @@
+{
+  "name": "utopay/utopay-php",
+  "description": "UTOPAY payment gateway API client: card, Apple Pay, PayPal and crypto (USDT, ETH, BNB) payments with payouts to your own wallet.",
+  "type": "library",
+  "keywords": ["payment gateway", "crypto payments", "usdt", "payment api", "high risk", "webhooks", "utopay"],
+  "homepage": "https://utopay.app/payment-gateway-api",
+  "license": "MIT",
+  "authors": [{ "name": "UTOPAY", "email": "info@utopay.app", "homepage": "https://utopay.app" }],
+  "require": { "php": ">=7.4", "ext-curl": "*", "ext-json": "*" },
+  "autoload": { "psr-4": { "Utopay\\": "src/" } },
+  "support": { "docs": "https://utopay.app/docs", "issues": "https://github.com/UtoPayApp/utopay-sdk/issues" }
+}

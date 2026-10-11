@@ -1,0 +1,161 @@
+openapi: 3.0.3
+info:
+  title: UTOPAY API
+  version: "1.0"
+  description: |
+    Payment gateway API for cards, Apple Pay, PayPal, Revolut and crypto.
+    Card and wallet payments are paid out in USDC on Polygon (4.5% all-in); crypto payments are forwarded
+    on-chain to your wallet (1.5% + network fee). Full documentation: https://utopay.app/docs
+  contact: { name: UTOPAY, url: "https://utopay.app", email: info@utopay.app }
+  license: { name: MIT, url: "https://opensource.org/licenses/MIT" }
+externalDocs: { description: UTOPAY documentation, url: "https://utopay.app/docs" }
+servers:
+  - url: https://api.utopay.app
+security:
+  - secretKey: []
+paths:
+  /v1/payments:
+    post:
+      summary: Create a card or wallet payment
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/PaymentRequest" } } } }
+      responses:
+        "200": { description: Order, content: { application/json: { schema: { $ref: "#/components/schemas/Order" } } } }
+        "400": { $ref: "#/components/responses/Error" }
+    get:
+      summary: List payments
+      parameters:
+        - { name: limit, in: query, schema: { type: integer, default: 50, maximum: 500 } }
+        - { name: offset, in: query, schema: { type: integer, default: 0 } }
+        - { name: status, in: query, schema: { type: string } }
+      responses:
+        "200": { description: Orders, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Order" } } } } }
+  /v1/payments/{id}:
+    get:
+      summary: Get a payment (live status check)
+      parameters: [{ name: id, in: path, required: true, schema: { type: string } }]
+      responses:
+        "200": { description: Order, content: { application/json: { schema: { $ref: "#/components/schemas/Order" } } } }
+        "404": { $ref: "#/components/responses/Error" }
+  /v1/pay:
+    post:
+      summary: Create a payment without an account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/PaymentRequest"
+                - type: object
+                  required: [payout_wallet]
+                  properties: { payout_wallet: { type: string, description: Polygon USDC address that receives the payout } }
+      responses:
+        "200": { description: Order, content: { application/json: { schema: { $ref: "#/components/schemas/Order" } } } }
+        "400": { $ref: "#/components/responses/Error" }
+  /v1/crypto/payments:
+    post:
+      summary: Create a crypto payment
+      requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/CryptoPaymentRequest" } } } }
+      responses:
+        "200": { description: Order, content: { application/json: { schema: { $ref: "#/components/schemas/Order" } } } }
+        "400": { $ref: "#/components/responses/Error" }
+  /v1/crypto/pay:
+    post:
+      summary: Create a crypto payment without an account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/CryptoPaymentRequest"
+                - { type: object, required: [payout_address] }
+      responses:
+        "200": { description: Order, content: { application/json: { schema: { $ref: "#/components/schemas/Order" } } } }
+        "400": { $ref: "#/components/responses/Error" }
+  /v1/crypto/coins:
+    get:
+      summary: Coins, networks and minimums of the crypto gateway
+      security: []
+      responses:
+        "200":
+          description: Coins
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fee: { type: object, properties: { total: { type: number, example: 0.015 }, note: { type: string } } }
+                  coins: { type: array, items: { $ref: "#/components/schemas/Coin" } }
+  /v1/providers:
+    get:
+      summary: Payment methods available now for an amount and currency
+      security: []
+      parameters:
+        - { name: amount, in: query, schema: { type: number } }
+        - { name: currency, in: query, schema: { type: string, example: USD } }
+      responses: { "200": { description: Providers } }
+  /v1/currencies:
+    get:
+      summary: Accepted fiat currencies
+      security: []
+      responses: { "200": { description: Currencies } }
+components:
+  securitySchemes:
+    secretKey: { type: http, scheme: bearer, description: "utopay_sk_live_… or utopay_sk_test_…" }
+  responses:
+    Error:
+      description: Error
+      content: { application/json: { schema: { type: object, properties: { error: { type: string } } } } }
+  schemas:
+    PaymentRequest:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount: { type: number, example: 49.9 }
+        currency: { type: string, example: EUR, description: "One of GET /v1/currencies" }
+        description: { type: string }
+        email: { type: string, format: email }
+        provider: { type: string, description: "Pin a method: stripe (cards, Apple Pay), paypal, revolut, transak (UPI) … — see GET /v1/providers" }
+        success_url: { type: string, format: uri }
+        cancel_url: { type: string, format: uri }
+        callback_url: { type: string, format: uri }
+        settlement: { type: string, enum: [direct, custody] }
+    CryptoPaymentRequest:
+      type: object
+      required: [coin]
+      properties:
+        coin: { type: string, example: bep20/usdt, description: "Ticker from GET /v1/crypto/coins" }
+        amount: { type: number, description: Price in fiat, converted at the current rate }
+        currency: { type: string, example: USD }
+        amount_coin: { type: number, description: Exact amount in the coin instead of amount + currency }
+        payout_address: { type: string, description: "Your wallet in that network (defaults to project settings with a key)" }
+        description: { type: string }
+        email: { type: string, format: email }
+        success_url: { type: string, format: uri }
+        cancel_url: { type: string, format: uri }
+        callback_url: { type: string, format: uri }
+    Order:
+      type: object
+      properties:
+        id: { type: string, example: ord_9pQ… }
+        status: { type: string, enum: [pending, paid, underpaid, expired, failed] }
+        is_test: { type: boolean }
+        amount: { type: number }
+        currency: { type: string }
+        checkout_url: { type: string, format: uri }
+        payment_page_url: { type: string, format: uri }
+        provider: { type: string, nullable: true }
+        payout_wallet: { type: string, nullable: true }
+        settlement: { type: string }
+    Coin:
+      type: object
+      properties:
+        ticker: { type: string, example: bep20/usdt }
+        coin: { type: string }
+        symbol: { type: string, example: USDT }
+        network: { type: string, example: BNB Smart Chain (BEP-20) }
+        minimum: { type: number, nullable: true }
+        available: { type: boolean }
